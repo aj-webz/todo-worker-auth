@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: todo-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: todow
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - todo-net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d todow" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: todo-web
+    environment:
+      DATABASE_URL: postgres://postgres@postgres:5432/todow?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    networks:
+      - todo-net
+   
+    command: >
+     sh -c "npx drizzle-kit push --config=packages/db/drizzle.config.ts --force && node apps/web/server.js"
+
+volumes:
+  pgdata:
+
+networks:
+  todo-net:

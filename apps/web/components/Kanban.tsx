@@ -54,10 +54,10 @@ const getCardBg = (todo: Todo, now: number) => {
   const remaining = end - now;
 
   //if (remaining <= 0) return "bg-red-200";
-  const remainingRatio = remaining / total; 
-  if (remainingRatio <= 0.25) return "bg-red-50"; 
-  if (remainingRatio <= 0.5) return "bg-yellow-50"; 
-  return "bg-gray-50"; 
+  const remainingRatio = remaining / total;
+  if (remainingRatio <= 0.25) return "bg-red-50";
+  if (remainingRatio <= 0.5) return "bg-yellow-50";
+  return "bg-gray-50";
 };
 
 
@@ -71,7 +71,7 @@ const getProgress = (todo: Todo, now: number) => {
   const remaining = end - now;
 
   let color = "bg-gray-200";
-  if (remaining <= 2 * 60 * 60 * 1000) color = "bg-red-100"; 
+  if (remaining <= 2 * 60 * 60 * 1000) color = "bg-red-100";
   else if (elapsed >= total / 2) color = "bg-yellow-200";
 
   const value = Math.min(100, (elapsed / total) * 100);
@@ -85,13 +85,13 @@ export const KanbanBoard = () => {
 
   const [now, setNow] = useState(Date.now());
 
-  
+
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
   }, []);
 
- 
+
   useEffect(() => {
     todos.forEach((todo) => {
       if (
@@ -119,12 +119,16 @@ export const KanbanBoard = () => {
   const onDragEnd = (result: DropResult) => {
     const { destination, source, draggableId } = result;
     if (!destination) return;
-    if (destination.droppableId === source.droppableId) return;
-    if (!isTodoStatus(destination.droppableId)) return;
 
+    const fromStatus = source.droppableId;
+    const toStatus = destination.droppableId;
+   // if (fromStatus === "backlog") return;
+    if (toStatus === fromStatus) return;
+    if (!isTodoStatus(toStatus)) return;
+    if (toStatus === "backlog") return;
     updateTodoStatus.mutate({
       id: draggableId.replace("todo-", ""),
-      status: destination.droppableId,
+      status: toStatus,
     });
   };
 
@@ -174,7 +178,7 @@ const TodoCard = ({
   now: number;
 }) => {
   const progress = getProgress(todo, now);
-  const deleteTodoMutation = useDeleteTodo(); 
+  const deleteTodoMutation = useDeleteTodo();
 
   const handleDelete = () => {
     deleteTodoMutation.mutate(todo.id);
@@ -191,7 +195,7 @@ const TodoCard = ({
             )}
           >
             <CardContent className="p-4 flex flex-col h-46.25 justify-between">
-              
+
               <div className="flex justify-between h-3 items-center ">
                 <h3
                   className="font-semibold text-[12px] leading-tight"
@@ -205,18 +209,18 @@ const TodoCard = ({
                   <Badge className={cn(statusColor[todo.status], "text-[10px] h-4")}>
                     {todo.status}
                   </Badge>
-                  <Button  onClick={handleDelete} className="rounded-full h-5 text-[8px] text-white bg-red-600">
+                  <Button onClick={handleDelete} className="rounded-full h-5 text-[8px] text-white bg-red-600">
                     X
                   </Button>
                 </div>
               </div>
 
-             
+
               <p className="text-[10px] text-gray-400 line-clamp-2">
                 {todo.description}
               </p>
 
-              
+
               <div className="flex justify-between mt-2">
                 <span className="flex flex-col">
                   <span className="text-[8px] font-semibold text-gray-700">Start</span>

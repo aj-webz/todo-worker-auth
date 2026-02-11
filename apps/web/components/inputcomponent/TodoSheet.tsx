@@ -40,7 +40,7 @@ export function CreateTodoSheet(): React.ReactElement {
   const form = useForm<CreateTodoFormInput>({
     resolver: zodResolver(CreateTodoFormSchema),
     defaultValues: {
-      title: "Add you task",
+      title: "Add Task name",
       description: "Enter task description",
       dueDate: new Date(),
       dueTime: "00:00:00",

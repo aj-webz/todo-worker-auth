@@ -15,10 +15,12 @@ export function getDb() {
   if (!DATABASE_URL) {
     throw new Error("DATABASE_URL is missing");
   }
+   const isLocal = DATABASE_URL.includes("localhost") || DATABASE_URL.includes("postgres:5432");
+
 
   pool = new Pool({
     connectionString: DATABASE_URL,
-    ssl: {
+    ssl: isLocal ? false : {
       rejectUnauthorized: false, 
     },
   });
