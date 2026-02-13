@@ -1,0 +1,10 @@
+name: todo-worker
+description: It is docker version of pulumi
+runtime:
+  name: nodejs
+  options:
+    packagemanager: pnpm
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: aws-typescript

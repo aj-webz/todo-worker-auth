@@ -73,7 +73,7 @@ export function TodoStatusChart() {
 
             <Bar
               dataKey="value"
-              radius={[6, 6, 0, 0]}
+              radius={[10, 10, 0, 0]}
               fill="hsl(var(--primary))"
             />
           </BarChart>

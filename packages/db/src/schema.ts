@@ -3,10 +3,21 @@
     text,
     boolean,
     timestamp,
-    pgEnum,
+    pgEnum,uuid
   } from "drizzle-orm/pg-core";
 
- 
+  export const users = pgTable("users",
+    {
+      id: uuid("id").primaryKey().defaultRandom(),
+      email: text("email").notNull().unique(),
+      password:text("password").notNull(),
+      createdAt:timestamp("created_at").defaultNow().notNull(),
+    }
+  )
+
+
+
+
   export const todoStatusEnum = pgEnum("todo_status", [
     "todo",
     "in-progress",

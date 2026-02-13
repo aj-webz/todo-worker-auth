@@ -2,6 +2,7 @@ import pkg from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "./schema";
 
+
 const { Pool } = pkg;
 
 let pool: pkg.Pool | null = null;
@@ -31,3 +32,4 @@ export function getDb() {
 }
 
 export {todos} from "./schema";
+export { users} from "./schema"

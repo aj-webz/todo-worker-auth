@@ -6,10 +6,9 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "start": "turbo run start",
-    "db:migrate": "turbo run db:migrate", 
+    "db:migrate": "turbo run db:migrate",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
-
   },
   "devDependencies": {
     "@workspace/eslint-config": "workspace:*",
@@ -26,13 +25,17 @@
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^5.2.2",
+    "@pulumi/awsx": "^3.1.0",
     "@tanstack/react-query": "^5.90.20",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
     "date-fns": "^4.1.0",
     "drizzle-kit": "^0.31.8",
     "drizzle-orm": "^0.45.1",
     "hono": "^4.11.7",
     "nanoid": "^5.1.1",
     "react-hook-form": "^7.71.1",
+    "sonner": "^2.0.7",
     "zod": "^3.25.76"
   },
   "pnpm": {

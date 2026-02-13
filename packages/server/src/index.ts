@@ -1,18 +1,201 @@
 import { Hono } from "hono";
 import { eq } from "drizzle-orm";
+import { sign, verify } from "hono/jwt";
 import { logger } from "hono/logger";
 import { nanoid } from "nanoid";
-
-import { getDb, todos } from "@repo/db";
+import bcrypt from "bcryptjs";
+import { getDb, todos, users } from "@repo/db";
+import secure from "hono/cookie";
+import  type { Context, Next } from "hono"
 import {
   CreateTodoSchema,
   TodoSchema,
   TodoStatusEnum,
 } from "@repo/shared";
+import {
+  deleteCookie,
+  getCookie,
+  getSignedCookie,
+  setCookie,
+  setSignedCookie,
+  generateCookie,
+  generateSignedCookie,
+} from 'hono/cookie';
+import { jwt } from "hono/jwt"
+import type { JwtVariables } from "hono/jwt";
 
+type Variables = {
+  user:{
+    sub:string;
+    email:string;
+    exp:number;
+  };
+};
 const app = new Hono().basePath("/api");
 
 app.use("*", logger());
+const JWT_SECRET = process.env.JWT_SECRET!;
+
+if(!JWT_SECRET) throw new Error("JWT secret is missing");
+const hour = 60*60;
+
+
+const authGuard = async (c:Context, next:Next) =>
+{
+  const token = getCookie(c,"auth_token");
+  if(!token)
+  {
+    return c.json({error:"Unauthorised access"}, 401);
+  }
+
+  try
+  {
+    const payload = await verify(token, JWT_SECRET,"HS256");
+    c.set("user", payload as Variables["user"]);
+    await next();
+  }
+  catch
+  {
+    return c.json({error:"Invalid or expired token"},401);
+  }
+}
+app.post("/register", async (c) => {
+  try {
+    const db = getDb();
+    const { email, password } = await c.req.json();
+
+    if (!email || !password || password.length < 8) {
+      return c.json({ error: "Invalid email or password" }, 400);
+    }
+
+    const [existing] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email));
+
+    if (existing) {
+      return c.json({ error: "User already exists" }, 409);
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        email,
+        password: hashedPassword,
+      })
+      .returning();
+
+    return c.json({
+      success: true,
+      user: {
+        id: newUser?.id,
+        email: newUser?.email,
+      },
+    }, 201);
+
+  } catch (err) {
+    console.error(err);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+
+
+app.post("/login", async (c) => {
+  try {
+    const db = getDb();
+    const { email, password } = await c.req.json();
+
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email));
+
+    if (!user) {
+      return c.json({ error: "Invalid credentials" }, 401);
+    }
+
+    const valid = await bcrypt.compare(password, user.password);
+
+    if (!valid) {
+      return c.json({ error: "Invalid credentials" }, 401);
+    }
+
+    const payload = {
+      sub: user.id,
+      email: user.email,  
+      exp: Math.floor(Date.now() / 1000) + hour,
+    };
+
+    const token = await sign(payload, JWT_SECRET);
+
+    setCookie(c, "auth_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Lax",
+      path: "/",
+      maxAge: hour,
+    });
+
+    return c.json({
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+      },
+    });
+
+  } catch (err) {
+    console.error(err);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+
+
+app.post("/logout", (c) => {
+  deleteCookie(c, "auth_token", {
+    path: "/",
+    sameSite: "Lax",
+    secure: process.env.NODE_ENV === "production",
+  });
+
+  return c.json({
+    success: true,
+  });
+});
+
+
+
+app.get("/get-session", authGuard, (c) => {
+  const payload = c.get("jwtPayload");
+
+  return c.json({
+    authenticated: true,
+    user:payload,
+  });
+});
+
+
+app.use("/dashboard/*", authGuard);
+app.use("/manage/*", authGuard);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Todo API
 
 app.get("/", async (c) => {
   const db = getDb();

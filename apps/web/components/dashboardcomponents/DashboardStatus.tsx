@@ -1,8 +1,9 @@
 "use client";
 
-import { StatCard } from "./TodoStats";
+
 import { useTodoQuery } from "@/hooks/queryhook";
 import { isToday } from "date-fns";
+import StatCard from "./StatCard";
 
 export function DashboardStats() {
 
@@ -18,10 +19,10 @@ export function DashboardStats() {
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-5">
-            <StatCard label="Today" value={today} variant="today" />
-            <StatCard label="Pending" value={pending} variant="pending" />
-            <StatCard label="Completed" value={completed} variant="completed" />
-            <StatCard label="Backlog" value={backlogCount} variant="backlog" />
+            <StatCard label="Today" value={today} variant="today" total={todos.length} />
+            <StatCard label="Pending" value={pending} variant="pending" total={todos.length}/>
+            <StatCard label="Completed" value={completed} variant="completed" total={todos.length}/>
+            <StatCard label="Backlog" value={backlogCount} variant="backlog" total={todos.length}/>
         </div>
     );
 

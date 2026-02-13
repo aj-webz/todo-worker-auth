@@ -11,13 +11,11 @@ export function DashboardStats() {
 
   const completedCount = todos.filter((t) => t.status === "completed").length;
 
- // const backlogCount = todos.filter((t)=>t.status === "backlog").length;
-
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-      <StatCard label="Today" value={todayCount} variant="today" />
-      <StatCard label="Pending" value={pendingCount} variant="pending" />
-      <StatCard label="Completed" value={completedCount} variant="completed" />
+      <StatCard label="Today" value={todayCount} variant="today" total={todos.length} />
+      <StatCard label="Pending" value={pendingCount} variant="pending"  total={todos.length}/>
+      <StatCard label="Completed" value={completedCount} variant="completed" total={todos.length} />
     </div>
   );
 }
