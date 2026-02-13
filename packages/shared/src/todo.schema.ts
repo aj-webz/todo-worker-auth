@@ -1,8 +1,6 @@
 import { z } from "zod";
 
-/* =============================
-   Enums
-   ============================= */
+
 const TodoStatusEnum = z.enum([
   "todo",
   "in-progress",
@@ -41,7 +39,6 @@ const CreateTodoSchema = CreateTodoFormSchema.transform((data) => {
 
   const end = new Date(data.dueDate);
   end.setHours(h, m, s, 0);
-
   return {
     title: data.title,
     description: data.description,

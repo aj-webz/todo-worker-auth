@@ -156,7 +156,7 @@ app.post("/login", async (c) => {
         id: user.id,
         email: user.email,
       },
-    });
+    },200);
 
   } catch (err) {
     console.error(err);

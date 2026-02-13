@@ -3,7 +3,8 @@
 import * as React from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
+//import { format } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz"
 import { CalendarIcon, Plus } from "lucide-react";
 
 import {
@@ -32,6 +33,7 @@ import {
   CreateTodoFormSchema,
   type CreateTodoFormInput,
 } from "@repo/shared";
+import { formatToIST } from "@/lib/date-utils";
 
 export function CreateTodoSheet(): React.ReactElement {
   const createTodo = useCreateTodo();
@@ -106,7 +108,7 @@ export function CreateTodoSheet(): React.ReactElement {
                 className={cn("justify-start")}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {format(dueDate, "dd MMM yyyy")}
+                {formatToIST(dueDate, "dd MMM yyyy")}
               </Button>
             </PopoverTrigger>
 

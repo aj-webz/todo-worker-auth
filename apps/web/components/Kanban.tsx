@@ -18,6 +18,7 @@ import { cn } from "@workspace/ui/lib/utils";
 import type { Todo, TodoStatus } from "@repo/shared";
 import { useTodoQuery, useUpdateTodoStatus } from "../hooks/queryhook";
 import { useDeleteTodo } from "../hooks/queryhook"
+import { formatToIST } from "@/lib/date-utils";
 
 
 const isTodoStatus = (value: string): value is TodoStatus =>
@@ -225,14 +226,14 @@ const TodoCard = ({
                 <span className="flex flex-col">
                   <span className="text-[8px] font-semibold text-gray-700">Start</span>
                   <span className="text-[10px] font-semibold text-black">
-                    {format(new Date(todo.createdAt), "dd MMM HH:mm:ss")}
+                    {formatToIST(new Date(todo.createdAt), "dd MMM HH:mm:ss")}
                   </span>
                 </span>
                 {todo.endAt && (
                   <span className="flex flex-col">
                     <span className="text-[8px] font-semibold text-gray-700">End</span>
                     <span className="text-[10px] font-semibold text-black">
-                      {format(new Date(todo.endAt), "dd MMM HH:mm:ss")}
+                      {formatToIST(new Date(todo.endAt), "dd MMM HH:mm:ss")}
                     </span>
                   </span>
                 )}

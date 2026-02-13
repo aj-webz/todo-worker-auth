@@ -100,7 +100,7 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* Password */}
+        
             <div className="space-y-4">
               <Label className="text-base font-semibold">Password</Label>
 
