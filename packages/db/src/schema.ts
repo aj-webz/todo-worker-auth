@@ -6,11 +6,14 @@
     pgEnum,uuid
   } from "drizzle-orm/pg-core";
 
+
+  export const userRoleEnum  =  pgEnum("user_role",["user","admin"]);
   export const users = pgTable("users",
     {
       id: uuid("id").primaryKey().defaultRandom(),
       email: text("email").notNull().unique(),
       password:text("password").notNull(),
+      role:userRoleEnum("role").notNull().default("user"),
       createdAt:timestamp("created_at").defaultNow().notNull(),
     }
   )

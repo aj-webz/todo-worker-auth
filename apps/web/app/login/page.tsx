@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useForm } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@workspace/ui/components/button"
@@ -19,10 +19,19 @@ import { useMutation } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { Eye, EyeOff } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select"
+
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
+  role: z.enum(["user", "admin"]),
 })
 
 type LoginFormValues = z.infer<typeof loginSchema>
@@ -33,13 +42,16 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-  })
+    defaultValues: { role: "user" },
+  });
 
+  const selectedRole = watch("role");
   const router = useRouter()
-
   const { mutate: loginUser } = useMutation({
     mutationFn: async (values: LoginFormValues) => {
       const response = await fetch("/api/login", {
@@ -56,10 +68,11 @@ export default function LoginPage() {
       return data
     },
     onSuccess: () => {
-      toast.success("Welcome back 🎉")
+      toast.success("Welcome back !")
       router.push("/dashboard")
     },
     onError: (error: Error) => {
+      alert(`Invalid ${error.message}`);
       toast.error(error.message)
     },
   })
@@ -67,10 +80,10 @@ export default function LoginPage() {
   const onSubmit = (data: LoginFormValues) => loginUser(data)
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-muted/40 to-muted px-8">
-      <Card className="w-full max-w-2xl rounded-3xl border border-border/50 bg-background/90 backdrop-blur-xl shadow-2xl">
+    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-background via-muted/40 to-muted px-8">
+      <Card className="w-full  max-w-xl rounded-3xl border border-border/50 bg-background/90 backdrop-blur-xl shadow-2xl">
+
         
-        {/* Header */}
         <CardHeader className="space-y-6 px-16 pt-16 pb-8 text-center">
           <CardTitle className="text-5xl font-extrabold tracking-tight">
             Welcome Back
@@ -80,16 +93,16 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
 
-        {/* Content */}
+      
         <CardContent className="px-16 pb-16">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
-            
-            {/* Email */}
+
+          
             <div className="space-y-4">
               <Label className="text-base font-semibold">Email</Label>
               <Input
                 type="email"
-                placeholder="you@example.com"
+                placeholder="Enter your email"
                 className="h-14 rounded-xl text-base"
                 {...register("email")}
               />
@@ -100,14 +113,14 @@ export default function LoginPage() {
               )}
             </div>
 
-        
+
             <div className="space-y-4">
               <Label className="text-base font-semibold">Password</Label>
 
               <div className="relative">
                 <Input
                   type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
+                  placeholder="Enter your password"
                   className="h-14 rounded-xl pr-14 text-base"
                   {...register("password")}
                 />
@@ -132,7 +145,29 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* Button */}
+            <div className="space-y-2">
+              <Label className="text-base font-semibold">Login as</Label>
+              <Controller
+                name="role"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">User</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <p className="text-sm text-muted-foreground">
+                Logging in as <span className="font-semibold">{selectedRole}</span>
+              </p>
+            </div>
+          
+
             <Button
               type="submit"
               className="h-14 w-full rounded-xl text-lg font-semibold shadow-lg transition-all hover:scale-[1.02]"
@@ -142,17 +177,18 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          {/* Footer */}
-          <div className="mt-12 text-center">
+          
+
+          <div className="flex justify-between items-center mt-12 text-center">
             <p className="text-base text-muted-foreground">
-              Don’t have an account?{" "}
+              Don’t have an account?
+            </p>
               <Link
                 href="/register"
                 className="font-semibold text-primary hover:underline"
               >
                 Register here
               </Link>
-            </p>
           </div>
         </CardContent>
       </Card>

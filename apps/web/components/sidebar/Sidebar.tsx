@@ -11,13 +11,14 @@ import {
   Menu,
   ChevronLeft,
 } from "lucide-react"
+import { useSession } from "@/hooks/useSession";
 
 export default function Sidebar() {
   const [open, setOpen] = useState(true)
-
+  const { user, loading } = useSession();
   return (
     <div
-      onClick={() => setOpen((prev) => !prev)} 
+      onClick={() => setOpen((prev) => !prev)}
       className={cn(
         "h-full border-r border-border/50 bg-background shadow-sm transition-all duration-300 ease-in-out cursor-pointer select-none",
         open ? "w-50" : "w-16"
@@ -25,13 +26,13 @@ export default function Sidebar() {
     >
       <div className="flex h-full flex-col py-4">
 
-       
+
         <div className="flex justify-end px-3 mb-6">
           <Button
             variant="ghost"
             size="icon"
             onClick={(e) => {
-              e.stopPropagation() 
+              e.stopPropagation()
               setOpen((prev) => !prev)
             }}
             className="rounded-full h-8 w-8"
@@ -40,13 +41,13 @@ export default function Sidebar() {
           </Button>
         </div>
 
-        
+
         <nav className="flex-1 space-y-6 px-3.5">
           <SidebarItem
             href="/dashboard"
             icon={<LayoutDashboard size={20} />}
             label="Dashboard"
-            open={open} 
+            open={open}
           />
           <SidebarItem
             href="/manage"
@@ -54,12 +55,9 @@ export default function Sidebar() {
             label="Manage"
             open={open}
           />
-          <SidebarItem
-            href="/admin"
-            icon={<Shield size={20} />}
-            label="Administer"
-            open={open}
-          />
+          {!loading && user?.role === "admin" && (
+            <SidebarItem href="/admin" label="Administer" open={open} icon={<Shield size={20} />} />
+          )}
         </nav>
 
       </div>

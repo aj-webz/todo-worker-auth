@@ -16,7 +16,7 @@ const variantStyles: Record<StatCardProps["variant"], string> = {
   cancelled: "text-red-600",
 };
 
-// 🔥 Add descriptions here
+
 const descriptionMap: Record<StatCardProps["variant"], string> = {
   today: "Tasks created today",
   pending: "Currently in progress",

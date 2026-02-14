@@ -3,8 +3,7 @@
 import * as React from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-//import { format } from "date-fns";
-import { formatInTimeZone } from "date-fns-tz"
+import { format } from "date-fns";
 import { CalendarIcon, Plus } from "lucide-react";
 
 import {
@@ -33,7 +32,6 @@ import {
   CreateTodoFormSchema,
   type CreateTodoFormInput,
 } from "@repo/shared";
-import { formatToIST } from "@/lib/date-utils";
 
 export function CreateTodoSheet(): React.ReactElement {
   const createTodo = useCreateTodo();
@@ -51,20 +49,9 @@ export function CreateTodoSheet(): React.ReactElement {
 
   const onSubmit: SubmitHandler<CreateTodoFormInput> = (values) => {
     console.log("FORM VALUES (raw):", values);
-    const parts = values.dueTime.split(":");
-    const h = Number(parts[0]);
-    const m = Number(parts[1]);
-    const s = Number(parts[2]);
-    const combinedDate = new Date(values.dueDate);
-    combinedDate.setHours(h, m, s, 0);
-    const payLoad =
-    {
-      ...values,
-      dueDate: combinedDate.toISOString(),
-    } as unknown as CreateTodoFormInput
-    console.log("SENDING TO API (ISO):", payLoad.dueDate);
-    console.log()
-    createTodo.mutate(payLoad, {
+
+   
+    createTodo.mutate(values, {
       onSuccess: () => {
         form.reset({
           title: "",
@@ -101,7 +88,7 @@ export function CreateTodoSheet(): React.ReactElement {
           onSubmit={form.handleSubmit(onSubmit)}
           className="flex flex-1 flex-col gap-10 pt-4"
         >
-          <div className="space-y-2">
+                   <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
             <Input id="title" {...form.register("title")} />
           </div>
@@ -110,7 +97,7 @@ export function CreateTodoSheet(): React.ReactElement {
             <Textarea id="description" {...form.register("description")} />
           </div>
 
-
+         
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -119,7 +106,7 @@ export function CreateTodoSheet(): React.ReactElement {
                 className={cn("justify-start")}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {formatToIST(dueDate, "dd MMM yyyy")}
+                {format(dueDate, "dd MMM yyyy")}
               </Button>
             </PopoverTrigger>
 

@@ -5,8 +5,7 @@ import { logger } from "hono/logger";
 import { nanoid } from "nanoid";
 import bcrypt from "bcryptjs";
 import { getDb, todos, users } from "@repo/db";
-import secure from "hono/cookie";
-import  type { Context, Next } from "hono"
+import type { Context, Next } from "hono"
 import {
   CreateTodoSchema,
   TodoSchema,
@@ -15,67 +14,60 @@ import {
 import {
   deleteCookie,
   getCookie,
-  getSignedCookie,
   setCookie,
-  setSignedCookie,
-  generateCookie,
-  generateSignedCookie,
 } from 'hono/cookie';
-import { jwt } from "hono/jwt"
-import type { JwtVariables } from "hono/jwt";
+//import { jwt } from "hono/jwt"
+//import type { JwtVariables } from "hono/jwt";
 
 type Variables = {
-  user:{
-    sub:string;
-    email:string;
-    exp:number;
+  user: {
+    sub: string;
+    email: string;
+    role: "user" | "admin";
+    exp: number;
   };
 };
-const app = new Hono<{Variables:Variables}>().basePath("/api");
+const app = new Hono<{ Variables: Variables }>().basePath("/api");
 
 app.use("*", logger());
 const hour = 60 * 60;
 
 function getJwtSecret() {
   const secret = process.env.JWT_SECRET;
-  
+
   if (!secret) {
-  
+
     if (process.env.NODE_ENV === "production") {
-       return "build-time-dummy-key"; 
+      return "build-time-dummy-key";
     }
     throw new Error("JWT secret is missing");
   }
   return secret;
 }
 
-console.log("BUILD JWT_SECRET:", process.env.JWT_SECRET);
 
-const authGuard = async (c:Context, next:Next) =>
-{
-  const token = getCookie(c,"auth_token");
-  if(!token)
-  {
-    return c.json({error:"Unauthorised access"}, 401);
+
+const authGuard = async (c: Context, next: Next) => {
+  const token = getCookie(c, "auth_token");
+  if (!token) {
+    return c.json({ error: "Unauthorised access" }, 401);
   }
 
-  try
-  {
-    const payload = await verify(token, getJwtSecret(),"HS256");
+  try {
+    const payload = await verify(token, getJwtSecret(), "HS256");
     c.set("user", payload as Variables["user"]);
     await next();
   }
-  catch
-  {
-    return c.json({error:"Invalid or expired token"},401);
+  catch {
+    return c.json({ error: "Invalid or expired token" }, 401);
   }
 }
 app.post("/register", async (c) => {
   try {
     const db = getDb();
-    const { email, password } = await c.req.json();
+    const { email, password, role } = await c.req.json();
 
-    if (!email || !password || password.length < 8) {
+    if (!email || !password || !role || password.length < 8) {
       return c.json({ error: "Invalid email or password" }, 400);
     }
 
@@ -84,20 +76,22 @@ app.post("/register", async (c) => {
       .from(users)
       .where(eq(users.email, email));
 
+      console.log("User existing:",existing);
     if (existing) {
       return c.json({ error: "User already exists" }, 409);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
+    console.log("User hashpassword:",hashedPassword);
     const [newUser] = await db
       .insert(users)
       .values({
         email,
         password: hashedPassword,
+        role,
       })
       .returning();
-
+      console.log("New User Created: ",newUser);
     return c.json({
       success: true,
       user: {
@@ -117,7 +111,7 @@ app.post("/register", async (c) => {
 app.post("/login", async (c) => {
   try {
     const db = getDb();
-    const { email, password } = await c.req.json();
+    const { email, password ,role} = await c.req.json();
 
     const [user] = await db
       .select()
@@ -134,14 +128,19 @@ app.post("/login", async (c) => {
       return c.json({ error: "Invalid credentials" }, 401);
     }
 
+    if(user.role != role) {
+      return c.json({error :`You are not allowed to login as ${role}`}, 403);
+    }
+
     const payload = {
       sub: user.id,
-      email: user.email,  
+      email: user.email,
+      role: user.role,
       exp: Math.floor(Date.now() / 1000) + hour,
     };
-
+    console.log("Payload in login :", payload);
     const token = await sign(payload, getJwtSecret());
-
+    console.log("Token in login :", token);
     setCookie(c, "auth_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -155,8 +154,9 @@ app.post("/login", async (c) => {
       user: {
         id: user.id,
         email: user.email,
+        role: user.role,
       },
-    },200);
+    }, 200);
 
   } catch (err) {
     console.error(err);
@@ -182,10 +182,9 @@ app.post("/logout", (c) => {
 
 app.get("/get-session", authGuard, (c) => {
   const payload = c.get("user");
-
   return c.json({
     authenticated: true,
-    user:payload,
+    user: payload,
   });
 });
 
@@ -195,7 +194,23 @@ app.use("/manage/*", authGuard);
 
 
 
-
+app.get("/admin",authGuard,async(c)=>{
+  try{
+  const user = c.get("user") as { role: string};
+  if(user.role !== "admin")
+  {
+    return c.json({error: "Forbidden"},403);
+  }
+  const db = getDb();
+  const data = await db.select().from(users).where(eq(users.role,"user"));
+  console.log(data);
+  return c.json(data);
+}catch(error)
+{
+  console.error(error);
+  return  c.json({error:"Internal server error"},500);
+}
+})
 
 
 
